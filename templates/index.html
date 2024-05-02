@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Excel Files</title>
+</head>
+<body>
+    <h1>Upload Excel Files to Compare</h1>
+    <form action="/" method="post" enctype="multipart/form-data">
+        <input type="file" name="file1" required>
+        <input type="password" name="password1" placeholder="Password for File 1">
+        <input type="file" name="file2" required>
+        <input type="password" name="password2" placeholder="Password for File 2">
+        <input type="submit" value="Upload and Compare">
+    </form>
+</body>
+</html>
