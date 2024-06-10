@@ -6,7 +6,7 @@ import msoffcrypto
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -36,33 +36,27 @@ def decrypt_excel(file_path, password):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        file1 = request.files.get('file1')
-        file2 = request.files.get('file2')
-        password1 = request.form.get('password1', '')
-        password2 = request.form.get('password2', '')
-
-        if file1 and file2 and allowed_file(file1.filename) and allowed_file(file2.filename):
-            filepath1 = os.path.join(app.config['UPLOAD_FOLDER'], file1.filename)
-            filepath2 = os.path.join(app.config['UPLOAD_FOLDER'], file2.filename)
-            file1.save(filepath1)
-            file2.save(filepath2)
-
-            df1 = decrypt_excel(filepath1, password1)
-            df2 = decrypt_excel(filepath2, password2)
-
-            if df1 is not None and df2 is not None:
-                df1.set_index('SEATNO', inplace=True)
-                df2.set_index('SEATNO', inplace=True)
-                df1_changes = df1[df1['FINALMARKS'] != df2['FINALMARKS']]
-                df2_changes = df2[df1['FINALMARKS'] != df2['FINALMARKS']]
-                if df1_changes.empty and df2_changes.empty:
-                    return render_template('no_changes.html')
-                return render_template('changes.html', changes1=df1_changes.to_html(classes='data'),
-                                       changes2=df2_changes.to_html(classes='data'))
-            else:
-                return render_template('error.html', error="Could not decrypt or read one or both files.")
-        else:
-            return render_template('error.html', error="Invalid file format or no file uploaded.")
+        # Check if the POST request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # If the user does not select a file, the browser submits an empty file without a filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Stream the file to disk
+            with open(file_path, 'wb') as f:
+                while True:
+                    chunk = file.stream.read(1024)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            # Process the file here
+            return redirect(url_for('success'))
     return render_template('index.html')
 
 
