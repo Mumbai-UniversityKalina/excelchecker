@@ -32,6 +32,19 @@ def normalize_seatno(df, length=10):
     df['SEATNO'] = df['SEATNO'].astype(str).str.zfill(length)
     return df
 
+# Ensure the merge keys are present and have the same data type
+def prepare_dataframe(df):
+    df = normalize_seatno(df)
+    if 'Subjectcode' in df.columns:
+        df['Subjectcode'] = df['Subjectcode'].astype(str)
+    else:
+        st.error("Column 'Subjectcode' not found in one of the files.")
+        return None
+    if 'FINALMARKS' not in df.columns:
+        st.error("Column 'FINALMARKS' not found in one of the files.")
+        return None
+    return df
+
 st.title('Excel File Comparison App')
 
 # Upload files
@@ -46,20 +59,23 @@ if st.button("Compare Files"):
         df2 = decrypt_excel(file2, password2)
 
         if df1 is not None and df2 is not None:
-            df1 = normalize_seatno(df1)
-            df2 = normalize_seatno(df2)
+            df1 = prepare_dataframe(df1)
+            df2 = prepare_dataframe(df2)
 
-            # Merge the dataframes on SEATNO and Subjectcode
-            merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
-            
-            # Check for differences in FINALMARKS
-            changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
-            
-            if changes.empty:
-                st.success("No changes detected between the two files.")
+            if df1 is not None and df2 is not None:
+                # Merge the dataframes on SEATNO and Subjectcode
+                merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
+                
+                # Check for differences in FINALMARKS
+                changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
+                
+                if changes.empty:
+                    st.success("No changes detected between the two files.")
+                else:
+                    st.subheader("Changes Detected")
+                    st.write(changes)
             else:
-                st.subheader("Changes Detected")
-                st.write(changes)
+                st.error("Preparation of one or both dataframes failed.")
         else:
             st.error("Could not decrypt or read one or both files.")
     else:
