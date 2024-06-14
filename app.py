@@ -27,10 +27,14 @@ def decrypt_excel(file, password=None):
             st.error(f"Error reading Excel file: {e}")
             return None
 
-# Normalize SEATNO to a fixed length
+# Normalize SEATNO to a fixed length with leading zeros
 def normalize_seatno(df, length=10):
     df['SEATNO'] = df['SEATNO'].astype(str).str.zfill(length)
     return df
+
+# Remove duplicates based on SEATNO
+def remove_duplicates(df):
+    return df[~df.index.duplicated(keep='first')]
 
 st.title('Excel File Comparison App')
 
@@ -50,6 +54,10 @@ if st.button("Compare Files"):
             df2 = normalize_seatno(df2)
             df1.set_index('SEATNO', inplace=True)
             df2.set_index('SEATNO', inplace=True)
+
+            # Remove duplicates
+            df1 = remove_duplicates(df1)
+            df2 = remove_duplicates(df2)
 
             # Reindex df2 to match df1
             df2 = df2.reindex(df1.index)
