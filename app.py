@@ -32,10 +32,6 @@ def normalize_seatno(df, length=10):
     df['SEATNO'] = df['SEATNO'].astype(str).str.zfill(length)
     return df
 
-# Remove duplicates based on SEATNO
-def remove_duplicates(df):
-    return df[~df.index.duplicated(keep='first')]
-
 st.title('Excel File Comparison App')
 
 # Upload files
@@ -52,26 +48,18 @@ if st.button("Compare Files"):
         if df1 is not None and df2 is not None:
             df1 = normalize_seatno(df1)
             df2 = normalize_seatno(df2)
-            df1.set_index('SEATNO', inplace=True)
-            df2.set_index('SEATNO', inplace=True)
 
-            # Remove duplicates
-            df1 = remove_duplicates(df1)
-            df2 = remove_duplicates(df2)
-
-            # Reindex df2 to match df1
-            df2 = df2.reindex(df1.index)
-
-            df1_changes = df1[df1['FINALMARKS'] != df2['FINALMARKS']]
-            df2_changes = df2[df1['FINALMARKS'] != df2['FINALMARKS']]
+            # Merge the dataframes on SEATNO and Subjectcode
+            merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
             
-            if df1_changes.empty and df2_changes.empty:
+            # Check for differences in FINALMARKS
+            changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
+            
+            if changes.empty:
                 st.success("No changes detected between the two files.")
             else:
-                st.subheader("Changes in First File")
-                st.write(df1_changes)
-                st.subheader("Changes in Second File")
-                st.write(df2_changes)
+                st.subheader("Changes Detected")
+                st.write(changes)
         else:
             st.error("Could not decrypt or read one or both files.")
     else:
