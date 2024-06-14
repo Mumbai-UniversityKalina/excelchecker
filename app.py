@@ -15,15 +15,15 @@ def decrypt_excel(file, password):
         if password:
             office_file.load_key(password=password)
         else:
-            # Try to decrypt without a password
+            # No password provided, attempt to load without a password
             office_file.load_key()
+
         decrypted_stream = io.BytesIO()
         office_file.decrypt(decrypted_stream)
         decrypted_stream.seek(0)
         return pd.read_excel(decrypted_stream)
     except Exception as e:
         st.error(f"Error processing Excel file: {e}")
-        return None  # Return None to indicate failure in decryption or reading
 
 
 st.title('Excel File Comparison App')
