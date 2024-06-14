@@ -27,6 +27,11 @@ def decrypt_excel(file, password=None):
             st.error(f"Error reading Excel file: {e}")
             return None
 
+# Normalize SEATNO to a fixed length
+def normalize_seatno(df, length=10):
+    df['SEATNO'] = df['SEATNO'].astype(str).str.zfill(length)
+    return df
+
 st.title('Excel File Comparison App')
 
 # Upload files
@@ -41,8 +46,14 @@ if st.button("Compare Files"):
         df2 = decrypt_excel(file2, password2)
 
         if df1 is not None and df2 is not None:
+            df1 = normalize_seatno(df1)
+            df2 = normalize_seatno(df2)
             df1.set_index('SEATNO', inplace=True)
             df2.set_index('SEATNO', inplace=True)
+
+            # Reindex df2 to match df1
+            df2 = df2.reindex(df1.index)
+
             df1_changes = df1[df1['FINALMARKS'] != df2['FINALMARKS']]
             df2_changes = df2[df1['FINALMARKS'] != df2['FINALMARKS']]
             
