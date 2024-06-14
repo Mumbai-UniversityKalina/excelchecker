@@ -14,16 +14,15 @@ def decrypt_excel(file, password):
         office_file = msoffcrypto.OfficeFile(file)
         if password:
             office_file.load_key(password=password)
-        else:
-            # No password provided, attempt to load without a password
-            office_file.load_key()
-
+        # No need to explicitly handle the case where password is not provided,
+        # since msoffcrypto will handle unencrypted files without a key
         decrypted_stream = io.BytesIO()
         office_file.decrypt(decrypted_stream)
         decrypted_stream.seek(0)
         return pd.read_excel(decrypted_stream)
     except Exception as e:
         st.error(f"Error processing Excel file: {e}")
+        return None  # Return None to indicate failure in decryption or reading
 
 
 st.title('Excel File Comparison App')
