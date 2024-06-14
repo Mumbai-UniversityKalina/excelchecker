@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import os
 import io
 import msoffcrypto
 
@@ -9,21 +8,24 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'xlsx'
 
 # Function to decrypt and read Excel file
-def decrypt_excel(file, password):
+def decrypt_excel(file, password=None):
     try:
         office_file = msoffcrypto.OfficeFile(file)
         if password:
             office_file.load_key(password=password)
-        # No need to explicitly handle the case where password is not provided,
-        # since msoffcrypto will handle unencrypted files without a key
+        else:
+            office_file.load_key()  # Attempt to open without password
         decrypted_stream = io.BytesIO()
         office_file.decrypt(decrypted_stream)
         decrypted_stream.seek(0)
         return pd.read_excel(decrypted_stream)
     except Exception as e:
-        st.error(f"Error processing Excel file: {e}")
-        return None  # Return None to indicate failure in decryption or reading
-
+        st.warning(f"Decryption failed or not needed: {e}")
+        try:
+            return pd.read_excel(file)  # Attempt to read without decryption
+        except Exception as e:
+            st.error(f"Error reading Excel file: {e}")
+            return None
 
 st.title('Excel File Comparison App')
 
