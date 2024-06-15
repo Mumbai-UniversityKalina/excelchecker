@@ -38,10 +38,10 @@ def normalize_seatno(df, length=10):
 # Ensure the merge keys are present and have the same data type
 def prepare_dataframe(df):
     df = normalize_seatno(df)
-    if 'Subjectcode' in df.columns:
-        df['Subjectcode'] = df['Subjectcode'].astype(str)
+    if 'SUBCODE' in df.columns:
+        df['SUBCODE'] = df['SUBCODE'].astype(str)
     else:
-        st.error("Column 'Subjectcode' not found in one of the files.")
+        st.error("Column 'SUBCODE' not found in one of the files.")
         return None
     if 'FINALMARKS' not in df.columns:
         st.error("Column 'FINALMARKS' not found in one of the files.")
