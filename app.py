@@ -92,7 +92,7 @@ else:
                     status_text.text("Merging dataframes...")
                     progress_bar.progress(70)
                     # Merge the dataframes on SEATNO and Subjectcode
-                    merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
+                    merged_df = pd.merge(df1, df2, on=['SEATNO', 'SUBCODE'], suffixes=('_file1', '_file2'))
                     
                     status_text.text("Comparing FINALMARKS...")
                     progress_bar.progress(90)
