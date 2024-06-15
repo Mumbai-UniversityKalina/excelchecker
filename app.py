@@ -3,6 +3,9 @@ import pandas as pd
 import io
 import msoffcrypto
 
+# Define the correct password
+CORRECT_PASSWORD = "your_secure_password"
+
 # Function to check allowed file types
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'xlsx'
@@ -47,36 +50,49 @@ def prepare_dataframe(df):
 
 st.title('Excel File Comparison App')
 
-# Upload files
-file1 = st.file_uploader("Upload first Excel file", type="xlsx")
-password1 = st.text_input("Password for first file (leave blank if not encrypted)", type="password")
-file2 = st.file_uploader("Upload second Excel file", type="xlsx")
-password2 = st.text_input("Password for second file (leave blank if not encrypted)", type="password")
+# Password verification
+if 'password_verified' not in st.session_state:
+    st.session_state['password_verified'] = False
 
-if st.button("Compare Files"):
-    if file1 and file2 and allowed_file(file1.name) and allowed_file(file2.name):
-        df1 = decrypt_excel(file1, password1)
-        df2 = decrypt_excel(file2, password2)
+if not st.session_state['password_verified']:
+    password = st.text_input("Enter the password to access the app", type="password")
+    if st.button("Verify"):
+        if password == 9167546776:
+            st.session_state['password_verified'] = True
+            st.success("Password verified! You can now access the app.")
+        else:
+            st.error("Incorrect password. Please try again.")
+else:
+    # Upload files
+    file1 = st.file_uploader("Upload first Excel file", type="xlsx")
+    password1 = st.text_input("Password for first file (leave blank if not encrypted)", type="password")
+    file2 = st.file_uploader("Upload second Excel file", type="xlsx")
+    password2 = st.text_input("Password for second file (leave blank if not encrypted)", type="password")
 
-        if df1 is not None and df2 is not None:
-            df1 = prepare_dataframe(df1)
-            df2 = prepare_dataframe(df2)
+    if st.button("Compare Files"):
+        if file1 and file2 and allowed_file(file1.name) and allowed_file(file2.name):
+            df1 = decrypt_excel(file1, password1)
+            df2 = decrypt_excel(file2, password2)
 
             if df1 is not None and df2 is not None:
-                # Merge the dataframes on SEATNO and Subjectcode
-                merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
-                
-                # Check for differences in FINALMARKS
-                changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
-                
-                if changes.empty:
-                    st.success("No changes detected between the two files.")
+                df1 = prepare_dataframe(df1)
+                df2 = prepare_dataframe(df2)
+
+                if df1 is not None and df2 is not None:
+                    # Merge the dataframes on SEATNO and Subjectcode
+                    merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
+                    
+                    # Check for differences in FINALMARKS
+                    changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
+                    
+                    if changes.empty:
+                        st.success("No changes detected between the two files.")
+                    else:
+                        st.subheader("Changes Detected")
+                        st.write(changes)
                 else:
-                    st.subheader("Changes Detected")
-                    st.write(changes)
+                    st.error("Preparation of one or both dataframes failed.")
             else:
-                st.error("Preparation of one or both dataframes failed.")
+                st.error("Could not decrypt or read one or both files.")
         else:
-            st.error("Could not decrypt or read one or both files.")
-    else:
-        st.error("Invalid file format or no file uploaded.")
+            st.error("Invalid file format or no file uploaded.")
