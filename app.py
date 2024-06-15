@@ -4,7 +4,7 @@ import io
 import msoffcrypto
 
 # Define the correct password
-CORRECT_PASSWORD = "your_secure_password"
+CORRECT_PASSWORD = "9167546776"
 
 # Function to check allowed file types
 def allowed_file(filename):
@@ -57,7 +57,7 @@ if 'password_verified' not in st.session_state:
 if not st.session_state['password_verified']:
     password = st.text_input("Enter the password to access the app", type="password")
     if st.button("Verify"):
-        if password == 9167546776:
+        if password == CORRECT_PASSWORD:
             st.session_state['password_verified'] = True
             st.success("Password verified! You can now access the app.")
         else:
