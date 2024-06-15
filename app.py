@@ -70,21 +70,36 @@ else:
     password2 = st.text_input("Password for second file (leave blank if not encrypted)", type="password")
 
     if st.button("Compare Files"):
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+
         if file1 and file2 and allowed_file(file1.name) and allowed_file(file2.name):
+            status_text.text("Decrypting and reading first file...")
+            progress_bar.progress(10)
             df1 = decrypt_excel(file1, password1)
+            
+            status_text.text("Decrypting and reading second file...")
+            progress_bar.progress(30)
             df2 = decrypt_excel(file2, password2)
 
             if df1 is not None and df2 is not None:
+                status_text.text("Preparing dataframes...")
+                progress_bar.progress(50)
                 df1 = prepare_dataframe(df1)
                 df2 = prepare_dataframe(df2)
 
                 if df1 is not None and df2 is not None:
+                    status_text.text("Merging dataframes...")
+                    progress_bar.progress(70)
                     # Merge the dataframes on SEATNO and Subjectcode
                     merged_df = pd.merge(df1, df2, on=['SEATNO', 'Subjectcode'], suffixes=('_file1', '_file2'))
                     
+                    status_text.text("Comparing FINALMARKS...")
+                    progress_bar.progress(90)
                     # Check for differences in FINALMARKS
                     changes = merged_df[merged_df['FINALMARKS_file1'] != merged_df['FINALMARKS_file2']]
                     
+                    progress_bar.progress(100)
                     if changes.empty:
                         st.success("No changes detected between the two files.")
                     else:
